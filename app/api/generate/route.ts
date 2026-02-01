@@ -7,6 +7,8 @@ import { trackEvent } from '@/lib/analytics/tracker';
 import { logger } from '@/lib/logger';
 import { Document, Page, Text, View, StyleSheet, PDFViewer } from '@react-pdf/renderer';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -14,12 +16,33 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
+    // Support guest mode
+    const isGuest = !user && request.headers.get('x-guest-mode') === 'true';
+    const guestId = request.headers.get('x-guest-id');
+    
+    if (!user && !isGuest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-    const validation = generateDocumentSchema.safeParse(body);
+    
+    // For guest mode, allow non-UUID job posting IDs
+    let validation;
+    if (isGuest) {
+      // Relax validation for guest mode
+      validation = {
+        success: true,
+        data: {
+          job_posting_id: body.job_posting_id,
+          generate_cv: body.generate_cv !== false,
+          generate_cover: body.generate_cover !== false,
+          alignment_level: body.alignment_level || '50',
+          export_format: body.export_format || 'generic',
+        },
+      };
+    } else {
+      validation = generateDocumentSchema.safeParse(body);
+    }
 
     if (!validation.success) {
       return NextResponse.json(
@@ -29,17 +52,29 @@ export async function POST(request: NextRequest) {
     }
 
     // Get job posting
-    const { data: jobPosting, error: jobError } = await supabase
-      .from('job_postings')
-      .select('*')
-      .eq('id', validation.data.job_posting_id)
-      .single();
+    let jobPosting: any;
+    if (isGuest) {
+      // For guest mode, job posting should be passed in the request or retrieved from a cache
+      // For now, we'll expect it to be in the body
+      jobPosting = body.job_posting || null;
+      if (!jobPosting) {
+        return NextResponse.json({ error: 'Job posting not found' }, { status: 404 });
+      }
+    } else {
+      const { data: savedJob, error: jobError } = await supabase
+        .from('job_postings')
+        .select('*')
+        .eq('id', validation.data.job_posting_id)
+        .single();
 
-    if (jobError || !jobPosting) {
-      return NextResponse.json({ error: 'Job posting not found' }, { status: 404 });
+      if (jobError || !savedJob) {
+        return NextResponse.json({ error: 'Job posting not found' }, { status: 404 });
+      }
+      jobPosting = savedJob;
     }
 
     const alignmentLevel = parseInt(validation.data.alignment_level) as 10 | 30 | 50 | 70 | 90;
+    const userId = user?.id || `guest-${guestId}`;
 
     // Generate CV if requested
     let cvContent = null;
@@ -47,12 +82,15 @@ export async function POST(request: NextRequest) {
     let cvPdfUrl = null;
 
     if (validation.data.generate_cv) {
-      const cvResult = await generateCV(user.id, validation.data.job_posting_id, alignmentLevel);
-      cvContent = cvResult.content;
-      cvCitations = cvResult.citations;
-
-      // Generate PDF (simplified - would use proper PDF generation)
-      // For now, just save the content
+      if (isGuest) {
+        // For guest mode, generate a simplified CV
+        cvContent = `CV for ${jobPosting.title || 'Position'} at ${jobPosting.company || 'Company'}\n\n[CV content will be generated based on your uploaded materials]\n\nNote: Full CV generation requires an account.`;
+        cvCitations = [];
+      } else {
+        const cvResult = await generateCV(user.id, validation.data.job_posting_id, alignmentLevel);
+        cvContent = cvResult.content;
+        cvCitations = cvResult.citations;
+      }
     }
 
     // Generate cover letter if requested
@@ -61,13 +99,19 @@ export async function POST(request: NextRequest) {
     let coverPdfUrl = null;
 
     if (validation.data.generate_cover) {
-      const coverResult = await generateCoverLetter(
-        user.id,
-        validation.data.job_posting_id,
-        alignmentLevel
-      );
-      coverContent = coverResult.content;
-      coverCitations = coverResult.citations;
+      if (isGuest) {
+        // For guest mode, generate a simplified cover letter
+        coverContent = `Cover Letter for ${jobPosting.title || 'Position'} at ${jobPosting.company || 'Company'}\n\n[Cover letter content will be generated based on your uploaded materials]\n\nNote: Full cover letter generation requires an account.`;
+        coverCitations = [];
+      } else {
+        const coverResult = await generateCoverLetter(
+          user.id,
+          validation.data.job_posting_id,
+          alignmentLevel
+        );
+        coverContent = coverResult.content;
+        coverCitations = coverResult.citations;
+      }
     }
 
     // Save generated document
@@ -77,11 +121,13 @@ export async function POST(request: NextRequest) {
       ? 'cv'
       : 'cover_letter';
 
-    const { data: document, error: docError } = await supabase
-      .from('generated_documents')
-      .insert({
-        user_id: user.id,
-        job_posting_id: validation.data.job_posting_id,
+    let document: any;
+    if (isGuest) {
+      // For guest mode, create document in memory
+      document = {
+        id: `guest-doc-${Date.now()}`,
+        user_id: userId,
+        job_posting_id: jobPosting.id,
         type: documentType,
         cv_content: cvContent,
         cover_content: coverContent,
@@ -96,21 +142,46 @@ export async function POST(request: NextRequest) {
             alignment_score: alignmentLevel,
           },
         ],
-      })
-      .select()
-      .single();
+        created_at: new Date().toISOString(),
+      };
+    } else {
+      // Save to database for authenticated users
+      const { data: savedDoc, error: docError } = await supabase
+        .from('generated_documents')
+        .insert({
+          user_id: user.id,
+          job_posting_id: validation.data.job_posting_id,
+          type: documentType,
+          cv_content: cvContent,
+          cover_content: coverContent,
+          alignment_score: alignmentLevel,
+          citations: [...cvCitations, ...coverCitations],
+          iterations: [
+            {
+              version: 1,
+              content: { cv: cvContent, cover: coverContent },
+              timestamp: new Date().toISOString(),
+              changes: ['Initial generation'],
+              alignment_score: alignmentLevel,
+            },
+          ],
+        })
+        .select()
+        .single();
 
-    if (docError) {
-      logger.error('Error saving document', { error: docError });
-      return NextResponse.json({ error: 'Failed to save document' }, { status: 500 });
+      if (docError) {
+        logger.error('Error saving document', { error: docError });
+        return NextResponse.json({ error: 'Failed to save document' }, { status: 500 });
+      }
+      document = savedDoc;
+
+      // Track event
+      await trackEvent(user.id, 'document_generated', {
+        document_id: document.id,
+        type: documentType,
+        alignment_level: alignmentLevel,
+      });
     }
-
-    // Track event
-    await trackEvent(user.id, 'document_generated', {
-      document_id: document.id,
-      type: documentType,
-      alignment_level: alignmentLevel,
-    });
 
     return NextResponse.json({
       success: true,

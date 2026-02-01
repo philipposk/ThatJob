@@ -73,15 +73,34 @@ export default function GeneratePage() {
   };
 
   const handleGenerate = async () => {
-    if (!jobPosting) return;
+    if (!jobPosting) {
+      setError('Please analyze a job posting first');
+      return;
+    }
 
     setLoading(true);
+    setError(null);
+    
     try {
+      // Check if user is guest
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const isGuest = !user && localStorage.getItem('guest_mode') === 'true';
+      const guestId = localStorage.getItem('guest_id');
+
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (isGuest && guestId) {
+        headers['x-guest-mode'] = 'true';
+        headers['x-guest-id'] = guestId;
+      }
+
       const response = await fetch('/api/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           job_posting_id: jobPosting.id,
+          job_posting: isGuest ? jobPosting : undefined, // Include full job posting for guest mode
           generate_cv: generateCv,
           generate_cover: generateCover,
           alignment_level: alignment.toString(),
@@ -90,11 +109,26 @@ export default function GeneratePage() {
       });
 
       const data = await response.json();
-      if (data.success) {
-        window.location.href = `/documents/${data.document.id}`;
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate documents');
       }
-    } catch (error) {
+      
+      if (data.success) {
+        // For guest mode, save to localStorage
+        if (isGuest && guestId) {
+          const guestDocs = JSON.parse(localStorage.getItem('guest_documents') || '[]');
+          guestDocs.push(data.document);
+          localStorage.setItem('guest_documents', JSON.stringify(guestDocs));
+        }
+        
+        window.location.href = `/documents/${data.document.id}`;
+      } else {
+        throw new Error(data.error || 'Failed to generate documents');
+      }
+    } catch (error: any) {
       console.error('Error generating:', error);
+      setError(error.message || 'Failed to generate CV and cover letter. Please try again.');
     } finally {
       setLoading(false);
     }
