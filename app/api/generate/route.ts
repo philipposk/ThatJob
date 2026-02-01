@@ -76,11 +76,13 @@ export async function POST(request: NextRequest) {
     const alignmentLevel = parseInt(validation.data.alignment_level) as 10 | 30 | 50 | 70 | 90;
     const userId = user?.id || `guest-${guestId}`;
 
-    // Get guest materials if in guest mode
+    // Get guest materials and profile if in guest mode
     let guestMaterials: any[] = [];
+    let guestProfileData: any = null;
     if (isGuest && guestId) {
-      // Guest materials are passed in the request body
+      // Guest materials and profile are passed in the request body
       guestMaterials = body.guest_materials || [];
+      guestProfileData = body.guest_profile || null;
     }
 
     // Generate CV if requested
@@ -95,7 +97,8 @@ export async function POST(request: NextRequest) {
         alignmentLevel,
         jobPosting,
         isGuest,
-        guestMaterials
+        guestMaterials,
+        guestProfileData
       );
       cvContent = cvResult.content;
       cvCitations = cvResult.citations;
@@ -113,7 +116,8 @@ export async function POST(request: NextRequest) {
         alignmentLevel,
         jobPosting,
         isGuest,
-        guestMaterials
+        guestMaterials,
+        guestProfileData
       );
       coverContent = coverResult.content;
       coverCitations = coverResult.citations;

@@ -95,10 +95,15 @@ export default function GeneratePage() {
         headers['x-guest-id'] = guestId;
       }
 
-      // Get guest materials for AI generation
+      // Get guest materials and profile for AI generation
       let guestMaterials: any[] = [];
+      let guestProfile: any = null;
       if (isGuest && guestId) {
         guestMaterials = JSON.parse(localStorage.getItem('guest_materials') || '[]');
+        const guestProfileStr = localStorage.getItem('guest_profile');
+        if (guestProfileStr) {
+          guestProfile = JSON.parse(guestProfileStr);
+        }
       }
 
       const response = await fetch('/api/generate', {
@@ -108,6 +113,7 @@ export default function GeneratePage() {
           job_posting_id: jobPosting.id,
           job_posting: isGuest ? jobPosting : undefined, // Include full job posting for guest mode
           guest_materials: isGuest ? guestMaterials : undefined, // Include guest materials for AI
+          guest_profile: isGuest ? guestProfile : undefined, // Include guest profile for contact info
           generate_cv: generateCv,
           generate_cover: generateCover,
           alignment_level: alignment.toString(),
