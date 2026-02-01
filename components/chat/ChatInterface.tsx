@@ -52,6 +52,14 @@ export default function ChatInterface({ documentId }: { documentId?: string }) {
         headers['x-guest-id'] = guestId;
       }
 
+      // For guest mode, include conversation history for context (last 10 messages)
+      const conversationHistory = isGuest && messages.length > 0
+        ? messages.slice(-10).map((msg) => ({
+            role: msg.role as 'user' | 'assistant',
+            content: msg.content,
+          }))
+        : undefined;
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers,
@@ -59,6 +67,7 @@ export default function ChatInterface({ documentId }: { documentId?: string }) {
           conversation_id: conversationId,
           message: messageText, // Use saved message text
           document_id: documentId,
+          ...(conversationHistory && { conversation_history: conversationHistory }), // Include history for guest mode
         }),
       });
 
