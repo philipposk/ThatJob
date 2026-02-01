@@ -76,21 +76,29 @@ export async function POST(request: NextRequest) {
     const alignmentLevel = parseInt(validation.data.alignment_level) as 10 | 30 | 50 | 70 | 90;
     const userId = user?.id || `guest-${guestId}`;
 
+    // Get guest materials if in guest mode
+    let guestMaterials: any[] = [];
+    if (isGuest && guestId) {
+      // Guest materials are passed in the request body
+      guestMaterials = body.guest_materials || [];
+    }
+
     // Generate CV if requested
     let cvContent = null;
     let cvCitations: any[] = [];
     let cvPdfUrl = null;
 
     if (validation.data.generate_cv) {
-      if (isGuest) {
-        // For guest mode, generate a simplified CV
-        cvContent = `CV for ${jobPosting.title || 'Position'} at ${jobPosting.company || 'Company'}\n\n[CV content will be generated based on your uploaded materials]\n\nNote: Full CV generation requires an account.`;
-        cvCitations = [];
-      } else {
-        const cvResult = await generateCV(user.id, validation.data.job_posting_id, alignmentLevel);
-        cvContent = cvResult.content;
-        cvCitations = cvResult.citations;
-      }
+      const cvResult = await generateCV(
+        userId,
+        validation.data.job_posting_id,
+        alignmentLevel,
+        jobPosting,
+        isGuest,
+        guestMaterials
+      );
+      cvContent = cvResult.content;
+      cvCitations = cvResult.citations;
     }
 
     // Generate cover letter if requested
@@ -99,19 +107,16 @@ export async function POST(request: NextRequest) {
     let coverPdfUrl = null;
 
     if (validation.data.generate_cover) {
-      if (isGuest) {
-        // For guest mode, generate a simplified cover letter
-        coverContent = `Cover Letter for ${jobPosting.title || 'Position'} at ${jobPosting.company || 'Company'}\n\n[Cover letter content will be generated based on your uploaded materials]\n\nNote: Full cover letter generation requires an account.`;
-        coverCitations = [];
-      } else {
-        const coverResult = await generateCoverLetter(
-          user.id,
-          validation.data.job_posting_id,
-          alignmentLevel
-        );
-        coverContent = coverResult.content;
-        coverCitations = coverResult.citations;
-      }
+      const coverResult = await generateCoverLetter(
+        userId,
+        validation.data.job_posting_id,
+        alignmentLevel,
+        jobPosting,
+        isGuest,
+        guestMaterials
+      );
+      coverContent = coverResult.content;
+      coverCitations = coverResult.citations;
     }
 
     // Save generated document

@@ -16,47 +16,67 @@ interface GenerationContext {
 export async function generateCV(
   userId: string,
   jobPostingId: string,
-  alignmentLevel: AlignmentLevel
+  alignmentLevel: AlignmentLevel,
+  jobPosting?: JobPosting,
+  isGuest: boolean = false,
+  guestMaterials?: any[]
 ): Promise<{ content: string; citations: Citation[] }> {
   try {
-    const userProfile = await extractUserProfile(userId);
+    const userProfile = await extractUserProfile(userId, isGuest, guestMaterials);
     
-    // Get job posting (would need to fetch from DB)
-    // For now, using placeholder
-    const jobPosting: JobPosting = {
-      id: jobPostingId,
-      user_id: userId,
-      url: null,
-      title: null,
-      company: null,
-      description: null,
-      requirements: null,
-      company_info: null,
-      created_at: new Date().toISOString(),
-    };
+    // Use provided job posting or fetch from DB
+    let job: JobPosting;
+    if (jobPosting) {
+      job = jobPosting;
+    } else {
+      // Fetch from database for authenticated users
+      const { createClient } = await import('../supabase/server');
+      const supabase = await createClient();
+      const { data, error } = await supabase
+        .from('job_postings')
+        .select('*')
+        .eq('id', jobPostingId)
+        .single();
+      
+      if (error || !data) {
+        throw new Error('Job posting not found');
+      }
+      
+      job = {
+        id: data.id,
+        user_id: data.user_id,
+        url: data.url,
+        title: data.title,
+        company: data.company,
+        description: data.description,
+        requirements: data.requirements,
+        company_info: data.company_info,
+        created_at: data.created_at,
+      };
+    }
 
-    const companyInfo = jobPosting.company
-      ? await researchCompany(jobPosting.company)
-      : {
+    const companyInfo = job.company
+      ? await researchCompany(job.company)
+      : (job.company_info || {
           name: '',
           values: [],
           culture: [],
           mission: null,
           recent_news: [],
           ethics: [],
-        };
+        });
 
     const prompt = `Generate a professional CV for a job application. 
 
 User Profile:
-- Skills: ${userProfile.skills.join(', ')}
-- Experience: ${JSON.stringify(userProfile.experience)}
-- Education: ${JSON.stringify(userProfile.education)}
-- Projects: ${JSON.stringify(userProfile.projects)}
-- Summary: ${userProfile.summary}
+- Skills: ${userProfile.skills.join(', ') || 'To be extracted from materials'}
+- Experience: ${JSON.stringify(userProfile.experience) || '[]'}
+- Education: ${JSON.stringify(userProfile.education) || '[]'}
+- Projects: ${JSON.stringify(userProfile.projects) || '[]'}
+- Summary: ${userProfile.summary || 'To be generated from materials'}
 
 Job Requirements:
-${jobPosting.description || 'Not specified'}
+${job.description || 'Not specified'}
 
 Company Information:
 - Values: ${companyInfo.values.join(', ')}
@@ -128,10 +148,54 @@ Return JSON:
 export async function generateCoverLetter(
   userId: string,
   jobPostingId: string,
-  alignmentLevel: AlignmentLevel
+  alignmentLevel: AlignmentLevel,
+  jobPosting?: JobPosting,
+  isGuest: boolean = false,
+  guestMaterials?: any[]
 ): Promise<{ content: string; citations: Citation[] }> {
   try {
-    const userProfile = await extractUserProfile(userId);
+    const userProfile = await extractUserProfile(userId, isGuest, guestMaterials);
+    
+    // Use provided job posting or fetch from DB
+    let job: JobPosting;
+    if (jobPosting) {
+      job = jobPosting;
+    } else {
+      const { createClient } = await import('../supabase/server');
+      const supabase = await createClient();
+      const { data, error } = await supabase
+        .from('job_postings')
+        .select('*')
+        .eq('id', jobPostingId)
+        .single();
+      
+      if (error || !data) {
+        throw new Error('Job posting not found');
+      }
+      
+      job = {
+        id: data.id,
+        user_id: data.user_id,
+        url: data.url,
+        title: data.title,
+        company: data.company,
+        description: data.description,
+        requirements: data.requirements,
+        company_info: data.company_info,
+        created_at: data.created_at,
+      };
+    }
+
+    const companyInfo = job.company
+      ? await researchCompany(job.company)
+      : (job.company_info || {
+          name: '',
+          values: [],
+          culture: [],
+          mission: null,
+          recent_news: [],
+          ethics: [],
+        });
     
     // Similar structure to CV generation
     const prompt = `Generate a professional cover letter following this structure:
@@ -140,12 +204,39 @@ export async function generateCoverLetter(
 3. 2-3 paragraphs (skills/projects mapped to requirements)
 4. Close
 
+User Profile:
+- Skills: ${userProfile.skills.join(', ') || 'To be extracted from materials'}
+- Experience: ${JSON.stringify(userProfile.experience) || '[]'}
+- Education: ${JSON.stringify(userProfile.education) || '[]'}
+- Projects: ${JSON.stringify(userProfile.projects) || '[]'}
+- Summary: ${userProfile.summary || 'To be generated from materials'}
+
+Job Requirements:
+${job.description || 'Not specified'}
+
+Company Information:
+- Values: ${companyInfo.values?.join(', ') || 'Not specified'}
+- Culture: ${companyInfo.culture?.join(', ') || 'Not specified'}
+- Mission: ${companyInfo.mission || 'Not specified'}
+
 Alignment Level: ${alignmentLevel}%
+- 10%: Minimal company references, focus on skills
+- 30%: Light references to company values where applicable
+- 50%: Balanced approach
+- 70%: Strong value alignment
+- 90%: Deep cultural alignment (all claims verifiable)
+
 Tone: Direct, honest, confident
 Reference job specifics and company minimally
 All claims must be verifiable from user materials
 
-Return JSON with content and citations.`;
+Return JSON:
+{
+  "cover_content": "full cover letter text",
+  "citations": [
+    {"section": "Intro", "claim": "...", "source": "material_type", "line": 5}
+  ]
+}`;
 
     const response = await callAIWithFallback(
       [
