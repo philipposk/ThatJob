@@ -28,9 +28,13 @@ export const generateDocumentSchema = z.object({
 
 // Chat schemas
 export const chatMessageSchema = z.object({
-  conversation_id: z.string().uuid().optional(),
+  conversation_id: z.string().optional(), // Allow non-UUID for guest mode
   message: z.string().min(1).max(2000),
   document_id: z.string().uuid().optional(),
+  conversation_history: z.array(z.object({
+    role: z.enum(['user', 'assistant']),
+    content: z.string(),
+  })).optional(),
 });
 
 // Feedback schemas

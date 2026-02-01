@@ -26,10 +26,11 @@ export default function ChatInterface({ documentId }: { documentId?: string }) {
   const handleSend = async () => {
     if (!input.trim() || loading) return;
 
+    const messageText = input.trim(); // Save the message before clearing input
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: input,
+      content: messageText,
       created_at: new Date().toISOString(),
     };
 
@@ -38,17 +39,34 @@ export default function ChatInterface({ documentId }: { documentId?: string }) {
     setLoading(true);
 
     try {
+      // Check if user is guest
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const isGuest = !user && localStorage.getItem('guest_mode') === 'true';
+      const guestId = localStorage.getItem('guest_id');
+
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (isGuest && guestId) {
+        headers['x-guest-mode'] = 'true';
+        headers['x-guest-id'] = guestId;
+      }
+
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           conversation_id: conversationId,
-          message: input,
+          message: messageText, // Use saved message text
           document_id: documentId,
         }),
       });
 
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send message');
+      }
 
       if (data.success) {
         if (!conversationId) {
@@ -63,9 +81,19 @@ export default function ChatInterface({ documentId }: { documentId?: string }) {
         };
 
         setMessages((prev) => [...prev, aiMessage]);
+      } else {
+        throw new Error(data.error || 'Failed to get response');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending message:', error);
+      // Show error message to user
+      const errorMessage: Message = {
+        id: (Date.now() + 2).toString(),
+        role: 'assistant',
+        content: `Error: ${error.message || 'Failed to send message. Please try again.'}`,
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setLoading(false);
     }
