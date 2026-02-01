@@ -35,11 +35,10 @@ export async function POST(request: NextRequest) {
 
     let conversationId = validation.data.conversation_id;
 
-    // For guest mode, use simple conversation without database
+    // For guest mode, use conversation history from request
     if (isGuest) {
-      // Guest mode: conversation history should be passed from client
-      // For now, we'll process each message independently
-      // In a full implementation, you'd pass conversation history from client localStorage
+      // Use conversation history from request if provided
+      const conversationHistory = validation.data.conversation_history || [];
       
       // Get document context if available (for guest mode, from localStorage on client)
       let documentContext = '';
@@ -49,7 +48,7 @@ export async function POST(request: NextRequest) {
         documentContext = '\nNote: You may be discussing a specific document. Ask for details if needed.';
       }
       
-      // Get AI response directly
+      // Get AI response with conversation history
       const systemPrompt = `You are an AI assistant helping users with their CVs and cover letters. 
 You can:
 - Answer questions about documents
@@ -63,6 +62,7 @@ Be helpful, direct, and professional.`;
       const response = await callAIWithFallback(
         [
           { role: 'system', content: systemPrompt },
+          ...conversationHistory,
           { role: 'user', content: validation.data.message },
         ],
         {
