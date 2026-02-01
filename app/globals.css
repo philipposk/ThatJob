@@ -7,15 +7,67 @@
   --foreground: #171717;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #0f172a;
+  --foreground: #f1f5f9;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+/* Fix text readability in dark mode */
+.dark .text-gray-600 {
+  @apply text-gray-300;
+}
+
+.dark .text-gray-500 {
+  @apply text-gray-400;
+}
+
+.dark .text-gray-700 {
+  @apply text-gray-200;
+}
+
+/* Fix card backgrounds */
+.dark .bg-white {
+  @apply bg-gray-800;
+}
+
+.dark .bg-gray-50 {
+  @apply bg-gray-900;
+}
+
+.dark .bg-gray-100 {
+  @apply bg-gray-800;
+}
+
+/* Fix borders */
+.dark .border-gray-300 {
+  @apply border-gray-700;
+}
+
+.dark .border-gray-200 {
+  @apply border-gray-700;
+}
+
+/* Fix input fields */
+.dark input,
+.dark textarea,
+.dark select {
+  @apply bg-gray-800 text-gray-100 border-gray-700;
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  @apply border-blue-500 ring-blue-500;
+}
+
+/* Fix buttons */
+.dark .hover\:bg-gray-50:hover {
+  @apply hover:bg-gray-700;
 }
