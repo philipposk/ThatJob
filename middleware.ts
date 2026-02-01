@@ -8,10 +8,18 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  // Skip middleware if Supabase env vars are not set
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    // If env vars are missing, just pass through
+    // The app will show errors when trying to use Supabase features
+    return response;
+  }
+
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -28,25 +36,28 @@ export async function middleware(request: NextRequest) {
           );
         },
       },
+    });
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    // Protect dashboard routes
+    if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
+      return NextResponse.redirect(new URL('/login', request.url));
     }
-  );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // Protect dashboard routes
-  if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
-
-  // Redirect authenticated users away from auth pages
-  if (
-    (request.nextUrl.pathname.startsWith('/login') ||
-      request.nextUrl.pathname.startsWith('/signup')) &&
-    user
-  ) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    // Redirect authenticated users away from auth pages
+    if (
+      (request.nextUrl.pathname.startsWith('/login') ||
+        request.nextUrl.pathname.startsWith('/signup')) &&
+      user
+    ) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+  } catch (error) {
+    // If Supabase fails, just pass through
+    console.error('Middleware error:', error);
   }
 
   return response;

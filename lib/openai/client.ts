@@ -2,13 +2,22 @@ import OpenAI from 'openai';
 import { groq, GROQ_MODEL } from '../ai/groq';
 import { logger } from '../logger';
 
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error('Missing OPENAI_API_KEY environment variable');
-}
+// Don't throw on module load - will fail gracefully when actually used
+const openaiApiKey = process.env.OPENAI_API_KEY || '';
 
-export const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+export const openai = openaiApiKey
+  ? new OpenAI({
+      apiKey: openaiApiKey,
+    })
+  : ({
+      chat: {
+        completions: {
+          create: async () => {
+            throw new Error('OPENAI_API_KEY environment variable is not set');
+          },
+        },
+      },
+    } as any);
 
 export const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4-turbo-preview';
 
@@ -21,6 +30,10 @@ export async function callAIWithFallback(
     response_format?: any;
   } = {}
 ) {
+  if (!openaiApiKey) {
+    throw new Error('OPENAI_API_KEY environment variable is not set');
+  }
+
   try {
     const response = await openai.chat.completions.create({
       model: options.model || OPENAI_MODEL,
