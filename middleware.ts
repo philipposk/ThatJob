@@ -2,6 +2,12 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
+  // Skip middleware for static files and API routes
+  if (request.nextUrl.pathname.startsWith('/api') || 
+      request.nextUrl.pathname.startsWith('/_next')) {
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -25,39 +31,48 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value)
-          );
-          response = NextResponse.next({
-            request,
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
+          try {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            );
+            response = NextResponse.next({
+              request,
+            });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options)
+            );
+          } catch (e) {
+            // Ignore cookie errors
+          }
         },
       },
     });
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    // Protect dashboard routes
-    if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+      // Protect dashboard routes
+      if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
+        return NextResponse.redirect(new URL('/login', request.url));
+      }
 
-    // Redirect authenticated users away from auth pages
-    if (
-      (request.nextUrl.pathname.startsWith('/login') ||
-        request.nextUrl.pathname.startsWith('/signup')) &&
-      user
-    ) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      // Redirect authenticated users away from auth pages
+      if (
+        (request.nextUrl.pathname.startsWith('/login') ||
+          request.nextUrl.pathname.startsWith('/signup')) &&
+        user
+      ) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
+    } catch (authError) {
+      // If auth check fails, just pass through
+      // Don't block the request
     }
   } catch (error) {
-    // If Supabase fails, just pass through
-    console.error('Middleware error:', error);
+    // If Supabase initialization fails, just pass through
+    // Don't block the request - let the page handle it
   }
 
   return response;
