@@ -23,20 +23,32 @@ export default function MaterialUpload() {
   const handleUpload = async () => {
     setUploading(true);
 
+    // Check if user is logged in or guest
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const isGuest = !user && localStorage.getItem('guest_mode') === 'true';
+
     for (const file of files) {
       try {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('type', 'other');
-        formData.append('title', file.name);
+        if (isGuest) {
+          // Handle guest mode - save to localStorage
+          await handleGuestUpload(file);
+        } else {
+          // Handle authenticated user - use API
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('type', 'other');
+          formData.append('title', file.name);
 
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+          });
 
-        if (!response.ok) {
-          throw new Error('Upload failed');
+          if (!response.ok) {
+            throw new Error('Upload failed');
+          }
         }
 
         setProgress((prev) => ({ ...prev, [file.name]: 100 }));
@@ -49,6 +61,61 @@ export default function MaterialUpload() {
     setUploading(false);
     setFiles([]);
     setProgress({});
+  };
+
+  const handleGuestUpload = async (file: File): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = async (e) => {
+        try {
+          const arrayBuffer = e.target?.result as ArrayBuffer;
+          const buffer = Buffer.from(arrayBuffer);
+          
+          // Extract text content (simplified - just get text for now)
+          let content = '';
+          if (file.type === 'application/pdf') {
+            // For PDF, we'd need to call the API to parse, but for guest mode
+            // we'll just store the file info and extract text later if needed
+            content = `[PDF file: ${file.name}]`;
+          } else if (file.name.endsWith('.rtf')) {
+            content = `[RTF file: ${file.name}]`;
+          } else if (file.type.startsWith('text/')) {
+            content = buffer.toString('utf-8');
+          } else {
+            content = `[File: ${file.name}]`;
+          }
+
+          // Create material object
+          const material = {
+            id: `guest-material-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type: 'other',
+            title: file.name,
+            content,
+            file_name: file.name,
+            file_type: file.type === 'application/pdf' ? 'pdf' : file.name.split('.').pop() || 'txt',
+            file_size: file.size,
+            created_at: new Date().toISOString(),
+            // Store file as base64 for guest mode (limited size)
+            file_data: file.size < 5 * 1024 * 1024 ? arrayBuffer : null, // Only store if < 5MB
+          };
+
+          // Save to localStorage
+          const existingMaterials = JSON.parse(
+            localStorage.getItem('guest_materials') || '[]'
+          );
+          existingMaterials.push(material);
+          localStorage.setItem('guest_materials', JSON.stringify(existingMaterials));
+
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsArrayBuffer(file);
+    });
   };
 
   return (
