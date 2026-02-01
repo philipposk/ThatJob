@@ -56,10 +56,11 @@ export async function middleware(request: NextRequest) {
         data: { user },
       } = await supabase.auth.getUser();
 
-      // Protect dashboard routes
-      if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
-        return NextResponse.redirect(new URL('/login', request.url));
-      }
+      // Protect dashboard routes - but allow guest mode
+      // Guest mode is handled client-side via localStorage, so we can't check it here
+      // The dashboard page will handle guest mode checking
+      // Only redirect if we're sure it's not a guest (but we can't know, so let it through)
+      // The dashboard page itself will handle the redirect if needed
 
       // Redirect authenticated users away from auth pages
       if (
