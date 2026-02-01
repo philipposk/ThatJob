@@ -2,9 +2,12 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  // Skip middleware for static files and API routes
-  if (request.nextUrl.pathname.startsWith('/api') || 
-      request.nextUrl.pathname.startsWith('/_next')) {
+  // Skip middleware for static files, API routes, and root page
+  const pathname = request.nextUrl.pathname;
+  if (pathname === '/' || 
+      pathname.startsWith('/api') || 
+      pathname.startsWith('/_next') ||
+      pathname.startsWith('/favicon')) {
     return NextResponse.next();
   }
 
