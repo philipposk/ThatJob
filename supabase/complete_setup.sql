@@ -430,3 +430,22 @@ CREATE POLICY "Service role can manage templates"
 ON storage.objects FOR ALL
 TO service_role
 USING (bucket_id = 'templates');
+
+-- ============================================
+-- MIGRATION 007: Add Profile Details
+-- ============================================
+
+-- Add detailed profile information to user_profiles
+ALTER TABLE user_profiles 
+ADD COLUMN IF NOT EXISTS phone TEXT,
+ADD COLUMN IF NOT EXISTS linkedin_url TEXT,
+ADD COLUMN IF NOT EXISTS github_url TEXT,
+ADD COLUMN IF NOT EXISTS portfolio_url TEXT,
+ADD COLUMN IF NOT EXISTS address TEXT,
+ADD COLUMN IF NOT EXISTS city TEXT,
+ADD COLUMN IF NOT EXISTS country TEXT,
+ADD COLUMN IF NOT EXISTS postal_code TEXT,
+ADD COLUMN IF NOT EXISTS birthday DATE,
+ADD COLUMN IF NOT EXISTS photo_url TEXT,
+ADD COLUMN IF NOT EXISTS languages JSONB DEFAULT '[]'::jsonb,
+ADD COLUMN IF NOT EXISTS education_details JSONB DEFAULT '[]'::jsonb;

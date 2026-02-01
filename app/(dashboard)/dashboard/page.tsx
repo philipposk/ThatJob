@@ -170,6 +170,12 @@ export default function DashboardPage() {
             >
               ⚙️ Preferences
             </Link>
+            <Link
+              href="/profile"
+              className="p-4 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-center text-foreground"
+            >
+              👤 Profile
+            </Link>
           </div>
         </div>
       </div>
