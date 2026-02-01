@@ -1,0 +1,38 @@
+{
+  "name": "thatjob",
+  "version": "1.0.0",
+  "description": "AI-powered CV and cover letter generator",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@react-pdf/renderer": "^3.4.5",
+    "@supabase/ssr": "^0.1.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "autoprefixer": "^10.4.17",
+    "docx": "^8.5.0",
+    "groq-sdk": "^0.37.0",
+    "next": "^14.2.0",
+    "openai": "^4.28.0",
+    "pdf-parse": "^1.1.1",
+    "pino": "^9.0.0",
+    "postcss": "^8.4.35",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "rtf-parser": "^1.0.0",
+    "tailwindcss": "^3.4.0",
+    "winston": "^3.11.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/pdf-parse": "^1.1.5",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "typescript": "^5.3.3"
+  }
+}
