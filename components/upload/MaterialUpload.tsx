@@ -65,57 +65,47 @@ export default function MaterialUpload() {
 
   const handleGuestUpload = async (file: File): Promise<void> => {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      
-      reader.onload = async (e) => {
-        try {
-          const arrayBuffer = e.target?.result as ArrayBuffer;
-          const buffer = Buffer.from(arrayBuffer);
-          
-          // Extract text content (simplified - just get text for now)
-          let content = '';
-          if (file.type === 'application/pdf') {
-            // For PDF, we'd need to call the API to parse, but for guest mode
-            // we'll just store the file info and extract text later if needed
-            content = `[PDF file: ${file.name}]`;
-          } else if (file.name.endsWith('.rtf')) {
-            content = `[RTF file: ${file.name}]`;
-          } else if (file.type.startsWith('text/')) {
-            content = buffer.toString('utf-8');
-          } else {
-            content = `[File: ${file.name}]`;
+      // Extract text content for text files
+      if (file.type.startsWith('text/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const content = e.target?.result as string;
+            saveGuestMaterial(file, content);
+            resolve();
+          } catch (error) {
+            reject(error);
           }
-
-          // Create material object
-          const material = {
-            id: `guest-material-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            type: 'other',
-            title: file.name,
-            content,
-            file_name: file.name,
-            file_type: file.type === 'application/pdf' ? 'pdf' : file.name.split('.').pop() || 'txt',
-            file_size: file.size,
-            created_at: new Date().toISOString(),
-            // Store file as base64 for guest mode (limited size)
-            file_data: file.size < 5 * 1024 * 1024 ? arrayBuffer : null, // Only store if < 5MB
-          };
-
-          // Save to localStorage
-          const existingMaterials = JSON.parse(
-            localStorage.getItem('guest_materials') || '[]'
-          );
-          existingMaterials.push(material);
-          localStorage.setItem('guest_materials', JSON.stringify(existingMaterials));
-
-          resolve();
-        } catch (error) {
-          reject(error);
-        }
-      };
-
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsArrayBuffer(file);
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsText(file);
+      } else {
+        // For PDF/RTF, just store metadata
+        // Content extraction would require server-side processing
+        saveGuestMaterial(file, `[${file.type === 'application/pdf' ? 'PDF' : 'RTF'} file: ${file.name}]`);
+        resolve();
+      }
     });
+  };
+
+  const saveGuestMaterial = (file: File, content: string) => {
+    const material = {
+      id: `guest-material-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: 'other',
+      title: file.name,
+      content,
+      file_name: file.name,
+      file_type: file.type === 'application/pdf' ? 'pdf' : file.name.split('.').pop() || 'txt',
+      file_size: file.size,
+      created_at: new Date().toISOString(),
+    };
+
+    // Save to localStorage
+    const existingMaterials = JSON.parse(
+      localStorage.getItem('guest_materials') || '[]'
+    );
+    existingMaterials.push(material);
+    localStorage.setItem('guest_materials', JSON.stringify(existingMaterials));
   };
 
   return (
