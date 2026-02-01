@@ -52,9 +52,10 @@ export default function ChatInterface({ documentId }: { documentId?: string }) {
         headers['x-guest-id'] = guestId;
       }
 
-      // For guest mode, include conversation history for context (last 10 messages)
-      const conversationHistory = isGuest && messages.length > 0
-        ? messages.slice(-10).map((msg) => ({
+      // For guest mode, include conversation history for context (last 10 messages, excluding the one we just added)
+      // We need to get history before adding the current message, so use messages.length - 1
+      const conversationHistory = isGuest && messages.length > 1
+        ? messages.slice(0, -1).slice(-10).map((msg) => ({
             role: msg.role as 'user' | 'assistant',
             content: msg.content,
           }))
