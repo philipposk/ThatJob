@@ -95,12 +95,19 @@ export default function GeneratePage() {
         headers['x-guest-id'] = guestId;
       }
 
+      // Get guest materials for AI generation
+      let guestMaterials: any[] = [];
+      if (isGuest && guestId) {
+        guestMaterials = JSON.parse(localStorage.getItem('guest_materials') || '[]');
+      }
+
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers,
         body: JSON.stringify({
           job_posting_id: jobPosting.id,
           job_posting: isGuest ? jobPosting : undefined, // Include full job posting for guest mode
+          guest_materials: isGuest ? guestMaterials : undefined, // Include guest materials for AI
           generate_cv: generateCv,
           generate_cover: generateCover,
           alignment_level: alignment.toString(),
