@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+// Force static generation for local dev
+export const dynamic = 'force-static';
+
 export default function Home() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-8">
