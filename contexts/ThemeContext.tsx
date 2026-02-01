@@ -21,6 +21,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const savedTheme = localStorage.getItem('theme') as Theme | null;
     if (savedTheme && ['light', 'dark', 'system'].includes(savedTheme)) {
       setThemeState(savedTheme);
+    } else {
+      // Default to system if nothing saved
+      setThemeState('system');
     }
   }, []);
 
