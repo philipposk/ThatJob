@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, webpack }) => {
     // Fix for __dirname in ES modules and CommonJS modules
     if (isServer) {
       config.resolve.fallback = {
@@ -10,11 +10,10 @@ const nextConfig = {
         path: false,
       };
       
-      // Provide __dirname and __filename for CommonJS modules
+      // Provide __dirname for CommonJS modules that need it
       config.plugins.push(
-        new config.webpack.DefinePlugin({
+        new webpack.DefinePlugin({
           __dirname: JSON.stringify(process.cwd()),
-          __filename: JSON.stringify(__filename || ''),
         })
       );
     }
