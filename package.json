@@ -25,11 +25,10 @@
     "react-dom": "^18.3.0",
     "rtf-parser": "^1.0.0",
     "tailwindcss": "^3.4.0",
-    "winston": "^3.11.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
+    "@types/node": "^25.2.0",
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
