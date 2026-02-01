@@ -12,6 +12,8 @@ export const jobPostingSchema = z.object({
   url: z.string().url().optional(),
   description: z.string().min(50).optional(),
   preference_id: z.string().uuid().optional(),
+}).refine((data) => data.url || data.description, {
+  message: "Either url or description must be provided",
 });
 
 // Generation schemas
