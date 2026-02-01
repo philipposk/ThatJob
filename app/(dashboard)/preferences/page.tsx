@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function PreferencesPage() {
   const [preferences, setPreferences] = useState<any[]>([]);
@@ -74,35 +75,38 @@ export default function PreferencesPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-8">
+    <div className="max-w-4xl mx-auto p-8 min-h-screen bg-background">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Job Preferences</h1>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          {showForm ? 'Cancel' : '+ New Profile'}
-        </button>
+        <h1 className="text-2xl font-bold text-foreground">Job Preferences</h1>
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            {showForm ? 'Cancel' : '+ New Profile'}
+          </button>
+        </div>
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow mb-6">
-          <h2 className="text-lg font-semibold mb-4">Create Preference Profile</h2>
+        <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6 border border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold mb-4 text-foreground">Create Preference Profile</h2>
 
           <div className="space-y-4">
             <div>
-              <label className="block mb-2">Profile Name</label>
+              <label className="block mb-2 text-foreground">Profile Name</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-foreground"
                 required
               />
             </div>
 
             <div>
-              <label className="block mb-2">Default Alignment</label>
+              <label className="block mb-2 text-foreground">Default Alignment</label>
               <input
                 type="range"
                 min="10"
@@ -114,15 +118,16 @@ export default function PreferencesPage() {
                 }
                 className="w-full"
               />
-              <div className="text-sm text-gray-600">{formData.alignment_level}%</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">{formData.alignment_level}%</div>
             </div>
 
             <div>
-              <label className="flex items-center space-x-2">
+              <label className="flex items-center space-x-2 text-foreground">
                 <input
                   type="checkbox"
                   checked={formData.is_default}
                   onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
+                  className="w-4 h-4"
                 />
                 <span>Set as Default Profile</span>
               </label>
@@ -140,23 +145,23 @@ export default function PreferencesPage() {
 
       <div className="space-y-4">
         {preferences.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg shadow">
-            <p className="text-gray-600">No preferences saved yet</p>
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+            <p className="text-gray-600 dark:text-gray-400">No preferences saved yet</p>
           </div>
         ) : (
           preferences.map((pref) => (
-            <div key={pref.id} className="bg-white p-6 rounded-lg shadow">
+            <div key={pref.id} className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-semibold">
-                    {pref.name} {pref.is_default && <span className="text-blue-600">(Default)</span>}
+                  <h3 className="font-semibold text-foreground">
+                    {pref.name} {pref.is_default && <span className="text-blue-600 dark:text-blue-400">(Default)</span>}
                   </h3>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Alignment: {pref.alignment_level}% • Industries: {pref.industries.length} • Roles:{' '}
                     {pref.roles.length}
                   </p>
                 </div>
-                <button className="text-red-600 hover:text-red-700">Delete</button>
+                <button className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">Delete</button>
               </div>
             </div>
           ))
