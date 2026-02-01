@@ -21,19 +21,34 @@ export default function DashboardPage() {
   }, []);
 
   const checkUser = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user) {
-      const guestMode = localStorage.getItem('guest_mode');
-      if (!guestMode) {
+      if (!user) {
+        const guestMode = localStorage.getItem('guest_mode');
+        if (guestMode === 'true') {
+          // Guest mode is active, set user to null but don't redirect
+          setUser(null);
+          return;
+        }
+        // Not a guest and not logged in, redirect to login
         router.push('/login');
         return;
       }
-    }
 
-    setUser(user);
+      setUser(user);
+    } catch (error) {
+      console.error('Error checking user:', error);
+      // On error, check if guest mode is active
+      const guestMode = localStorage.getItem('guest_mode');
+      if (guestMode === 'true') {
+        setUser(null);
+        return;
+      }
+      router.push('/login');
+    }
   };
 
   const loadStats = async () => {
