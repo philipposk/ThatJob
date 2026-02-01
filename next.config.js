@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const DirnamePolyfillPlugin = require('./webpack-dirname-plugin');
+
 const nextConfig = {
   reactStrictMode: true,
   webpack: (config, { isServer, webpack }) => {
@@ -10,34 +12,16 @@ const nextConfig = {
         path: false,
       };
       
-      // Inject __dirname and __filename polyfill at the top of every server bundle
-      // This ensures they're available before any module tries to use them
+      // Replace __dirname and __filename with actual values at build time
       config.plugins.push(
-        new webpack.BannerPlugin({
-          banner: `
-            (function() {
-              if (typeof global !== 'undefined') {
-                if (typeof global.__dirname === 'undefined') {
-                  global.__dirname = process.cwd();
-                }
-                if (typeof global.__filename === 'undefined') {
-                  global.__filename = '';
-                }
-              }
-              if (typeof globalThis !== 'undefined') {
-                if (typeof globalThis.__dirname === 'undefined') {
-                  globalThis.__dirname = process.cwd();
-                }
-                if (typeof globalThis.__filename === 'undefined') {
-                  globalThis.__filename = '';
-                }
-              }
-            })();
-          `,
-          raw: true,
-          entryOnly: false, // Apply to all chunks, not just entry points
+        new webpack.DefinePlugin({
+          __dirname: JSON.stringify(process.cwd()),
+          __filename: JSON.stringify(''),
         })
       );
+      
+      // Also inject polyfill at runtime as backup
+      config.plugins.push(new DirnamePolyfillPlugin());
     }
     return config;
   },
