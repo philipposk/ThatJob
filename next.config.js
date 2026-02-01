@@ -10,10 +10,32 @@ const nextConfig = {
         path: false,
       };
       
-      // Provide __dirname for CommonJS modules that need it
+      // Inject __dirname and __filename polyfill at the top of every server bundle
+      // This ensures they're available before any module tries to use them
       config.plugins.push(
-        new webpack.DefinePlugin({
-          __dirname: JSON.stringify(process.cwd()),
+        new webpack.BannerPlugin({
+          banner: `
+            (function() {
+              if (typeof global !== 'undefined') {
+                if (typeof global.__dirname === 'undefined') {
+                  global.__dirname = process.cwd();
+                }
+                if (typeof global.__filename === 'undefined') {
+                  global.__filename = '';
+                }
+              }
+              if (typeof globalThis !== 'undefined') {
+                if (typeof globalThis.__dirname === 'undefined') {
+                  globalThis.__dirname = process.cwd();
+                }
+                if (typeof globalThis.__filename === 'undefined') {
+                  globalThis.__filename = '';
+                }
+              }
+            })();
+          `,
+          raw: true,
+          entryOnly: false, // Apply to all chunks, not just entry points
         })
       );
     }
