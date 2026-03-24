@@ -83,7 +83,7 @@ LOG_LEVEL=info
 
 1. **Initialize Git Repository:**
 ```bash
-cd "/Users/phktistakis/Devoloper Projects/ThatJob"
+cd /path/to/ThatJob
 git init
 git add .
 git commit -m "Initial commit: ThatJob AI CV Generator"
@@ -136,8 +136,8 @@ git push -u origin main
 ### 5. Copy Template Files
 
 ```bash
-cp user_cv.pdf public/templates/
-cp user_cover.pdf public/templates/
+cp /path/to/your_cv.pdf public/templates/
+cp /path/to/your_cover.pdf public/templates/
 ```
 
 ### 6. Local Development

@@ -2,16 +2,16 @@
 
 ## ✅ What You Already Have
 
-- [x] Supabase Project: https://supabase.com/dashboard/project/your-project-ref
-- [x] GitHub Repository: https://github.com/your-username/ThatJob
-- [x] Vercel Project: https://vercel.com/your-vercel-team/that-job
+- [x] Supabase Project: `https://supabase.com/dashboard/project/<your-project-ref>`
+- [x] GitHub Repository: `https://github.com/<your-username>/ThatJob`
+- [x] Vercel Project: `https://vercel.com/<your-team>/that-job`
 
 ## 📋 What Needs to Be Done
 
 ### 1. Supabase Setup (5 minutes)
 
 - [ ] **Run Database Migrations**
-  - [ ] Go to https://supabase.com/dashboard/project/your-project-ref
+  - [ ] Go to your Supabase project dashboard
   - [ ] Open SQL Editor
   - [ ] Run `supabase/complete_setup.sql` (or run migrations individually)
   - [ ] Verify all tables created in Table Editor
@@ -68,8 +68,8 @@
 ### 4. Final Steps (2 minutes)
 
 - [ ] **Copy Template Files**
-  - [ ] Upload `user_cv.pdf` to Supabase Storage → `templates` bucket
-  - [ ] Upload `user_cover.pdf` to Supabase Storage → `templates` bucket
+  - [ ] Upload your CV PDF to Supabase Storage → `templates` bucket
+  - [ ] Upload your cover letter PDF to Supabase Storage → `templates` bucket
   - [ ] Or keep in `public/templates/` for file-based access
 
 - [ ] **Test Production**

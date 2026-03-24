@@ -165,8 +165,8 @@ thatjob/
    - Deploy
 
 4. **Copy template files:**
-   - Copy `user_cv.pdf` to `public/templates/`
-   - Copy `user_cover.pdf` to `public/templates/`
+   - Copy your CV PDF to `public/templates/` (e.g. `user_cv.pdf`)
+   - Copy your cover letter PDF to `public/templates/` (e.g. `user_cover.pdf`)
 
 5. **Test the application:**
    - Test file uploads

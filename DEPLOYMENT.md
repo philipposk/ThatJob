@@ -68,7 +68,7 @@
 
 1. **Initialize Git:**
 ```bash
-cd "/Users/phktistakis/Devoloper Projects/ThatJob"
+cd /path/to/ThatJob
 git init
 git add .
 git commit -m "Initial commit: ThatJob AI CV Generator"
@@ -130,7 +130,7 @@ git push -u origin main
 ### 4. Post-Deployment
 
 1. **Copy Templates:**
-   - Upload `user_cv.pdf` and `user_cover.pdf` to Supabase Storage bucket `templates`
+   - Upload your template PDFs (e.g. `user_cv.pdf`, `user_cover.pdf`) to Supabase Storage bucket `templates`
    - Or use Vercel file system (if using file-based storage)
 
 2. **Test Everything:**

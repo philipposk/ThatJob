@@ -1,6 +1,6 @@
 -- Complete Supabase Setup for ThatJob
 -- Run this entire file in Supabase SQL Editor (one go)
--- Project: https://supabase.com/dashboard/project/your-project-ref
+-- Project: use your own Supabase dashboard URL (Settings → General → Reference ID)
 
 -- ============================================
 -- MIGRATION 001: Initial Schema

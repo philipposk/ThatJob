@@ -47,3 +47,10 @@ combined.log
 /*.docx
 /public/templates/*.pdf
 /public/templates/*.PDF
+
+# Local-only notes (may contain personal application content)
+/PROJECTS_REFERENCE.md
+/VALCON_APPLICATION.md
+
+# Local PDF output from scripts/generate-cv-pdfs.js
+/generated-cvs/

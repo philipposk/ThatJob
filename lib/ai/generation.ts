@@ -360,7 +360,7 @@ ${DOCUMENT_GUARDRAILS}
 Tone: Direct, honest, confident
 Reference job specifics and company minimally
 All claims must be verifiable from user materials
-- If the job posting includes a specific recruiter, hiring manager, or contact person by name, use that name in the greeting (for example, "Dear [Hiring contact],").
+- If the job posting includes a specific recruiter, hiring manager, or contact person by name, use that name in the greeting (for example, "Dear Alex Morgan," — use only a name that actually appears in the job posting).
 - Only use generic greetings like "Dear Hiring Team," when no specific contact name is provided.
 - Include the exact header block at the very top of the cover letter when available
 - Put the current date exactly as provided in the header block

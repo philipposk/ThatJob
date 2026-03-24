@@ -81,21 +81,20 @@ export default function ProfilePage() {
           if (guestProfile) {
             setProfile(JSON.parse(guestProfile));
           } else {
-            // Set default values from user's info
             setProfile({
-              full_name: '[Full Name]',
-              email: 'user@example.com',
-              phone: '00000000',
-              linkedin_url: 'https://www.linkedin.com/in/your-profile/',
-              github_url: 'https://github.com/your-username',
-              portfolio_url: 'example.com',
-              address: '[Street address]',
-              city: 'Copenhagen',
-              country: 'Denmark',
-              postal_code: '2300',
+              full_name: '',
+              email: '',
+              phone: '',
+              linkedin_url: '',
+              github_url: '',
+              portfolio_url: '',
+              address: '',
+              city: '',
+              country: '',
+              postal_code: '',
               birthday: '',
               photo_url: '',
-              languages: [{ language: 'Danish', level: 'Beginner (Module 3)' }],
+              languages: [],
               education_details: [],
             });
           }
@@ -332,7 +331,7 @@ export default function ProfilePage() {
               value={profile.full_name}
               onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-foreground"
-              placeholder="[Full Name]"
+              placeholder="Your full name"
             />
           </div>
 
@@ -343,7 +342,7 @@ export default function ProfilePage() {
               value={profile.email}
               onChange={(e) => setProfile({ ...profile, email: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-foreground"
-              placeholder="user@example.com"
+              placeholder="you@example.com"
             />
           </div>
 
@@ -354,7 +353,7 @@ export default function ProfilePage() {
               value={profile.phone}
               onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-foreground"
-              placeholder="00000000"
+              placeholder="+45 12 34 56 78"
             />
           </div>
 
@@ -397,7 +396,7 @@ export default function ProfilePage() {
               value={profile.portfolio_url}
               onChange={(e) => setProfile({ ...profile, portfolio_url: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-foreground"
-              placeholder="example.com"
+              placeholder="yourportfolio.example"
             />
           </div>
 
@@ -420,7 +419,7 @@ export default function ProfilePage() {
             value={profile.address}
             onChange={(e) => setProfile({ ...profile, address: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-foreground mb-2"
-            placeholder="[Street address]"
+            placeholder="Street and number"
           />
           <div className="grid grid-cols-3 gap-4">
             <input

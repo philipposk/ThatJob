@@ -1,76 +1,60 @@
-# DNS Setup for app.example.com
+# DNS Setup for a custom domain (example)
 
-## Vercel Domain Configuration
+## Vercel domain configuration
 
-### Main Production Domain
-Use: **`that-job.vercel.app`**
+### Main production domain
 
-This is your main production domain. The other domains are:
-- `that-job-git-main-...` - Branch-specific (for preview deployments)
-- `that-h0rd8kk6l-...` - Deployment-specific (temporary)
+Use your Vercel default URL (for example **`https://that-job.vercel.app`**) until a custom domain is configured. You may also see branch and deployment-specific preview URLs in the Vercel dashboard.
 
-## Papaki DNS Configuration
+## DNS provider configuration
 
-### Step 1: Add Domain in Vercel
+### Step 1: Add domain in Vercel
 
 1. Go to Vercel Dashboard → **Settings** → **Domains**
 2. Click **Add Domain**
-3. Enter: `app.example.com`
-4. Vercel will show you DNS records to add
+3. Enter your hostname (for example `app.example.com`)
+4. Vercel will show DNS records to add
 
-### Step 2: Configure DNS in Papaki
+### Step 2: Configure DNS at your registrar
 
 Vercel will give you one of these options:
 
-**Option A: CNAME Record (Recommended)**
+**Option A: CNAME record (recommended)**
+
 - **Type:** CNAME
-- **Name/Host:** `thatjob` (or `@` for root domain)
-- **Value/Target:** `cname.vercel-dns.com`
+- **Name/Host:** subdomain (e.g. `app`) or `@` for apex if supported
+- **Value/Target:** value shown in Vercel (often `cname.vercel-dns.com`)
 - **TTL:** 3600 (or default)
 
-**Option B: A Record (If CNAME not supported)**
+**Option B: A record (if CNAME is not supported for apex)**
+
 - **Type:** A
-- **Name/Host:** `thatjob` (or `@` for root domain)
-- **Value/Target:** `76.76.21.21` (Vercel's IP - check Vercel dashboard for current IP)
+- **Name/Host:** `@` or as instructed by Vercel
+- **Value/Target:** IP address shown in Vercel (verify current value in the dashboard)
 - **TTL:** 3600 (or default)
 
-### Step 3: Wait for DNS Propagation
+### Step 3: Wait for DNS propagation
 
-- DNS changes can take 5 minutes to 48 hours
-- Usually works within 1-2 hours
-- Check status in Vercel Dashboard → Domains
+- DNS changes can take from minutes up to 48 hours
+- Check status in Vercel → **Domains**
 
-### Step 4: Update Environment Variables
+### Step 4: Update environment variables
 
-Once DNS is configured and domain is active:
+Once the domain is active:
 
 1. **Update `.env.local`:**
+
 ```env
 NEXT_PUBLIC_APP_URL=https://app.example.com
 ```
 
-2. **Update Vercel Environment Variables:**
-   - Go to Vercel → Settings → Environment Variables
-   - Update `NEXT_PUBLIC_APP_URL` to: `https://app.example.com`
-   - Redeploy
-
-3. **Update Supabase Redirect URLs:**
-   - Go to Supabase Dashboard → Authentication → URL Configuration
-   - Add to Redirect URLs:
-     - `https://app.example.com`
-     - `https://app.example.com/dashboard`
-
-## Current Status
-
-**For NOW (before DNS is set up):**
-- Use: `https://that-job.vercel.app` in `NEXT_PUBLIC_APP_URL`
-
-**After DNS is configured:**
-- Use: `https://app.example.com` in `NEXT_PUBLIC_APP_URL`
+2. **Update Vercel environment variables** with the same `NEXT_PUBLIC_APP_URL`
+3. **Update Supabase redirect URLs** under Authentication → URL Configuration to include your production URL and `/dashboard` paths
 
 ## Verification
 
-After DNS setup, verify:
-1. Visit `https://app.example.com` - should load your app
-2. Check Vercel Dashboard → Domains - should show "Valid Configuration"
-3. Test authentication - should redirect correctly
+1. Visit your custom domain and confirm the app loads
+2. Vercel → **Domains** should show valid configuration
+3. Test sign-in and redirects end to end
+
+Replace `app.example.com` with your real hostname everywhere you configure URLs.

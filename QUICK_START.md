@@ -25,8 +25,8 @@ GROQ_API_KEY=gsk_...
 
 ### 4. Copy Templates
 ```bash
-cp user_cv.pdf public/templates/
-cp user_cover.pdf public/templates/
+cp /path/to/your_cv.pdf public/templates/
+cp /path/to/your_cover.pdf public/templates/
 ```
 
 ### 5. Run Development Server
