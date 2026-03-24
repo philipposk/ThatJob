@@ -36,6 +36,13 @@ const base = {
   portfolio: process.env.CV_PREVIEW_PORTFOLIO || 'portfolio.example',
   github: process.env.CV_PREVIEW_GITHUB || 'github.com/your-username',
   languages: ['English (professional)'],
+  // Keep this modest: light reading + hobby scale, not “research programme” or “platform ecosystem”.
+  interests: [
+    'Casual reading online (science, medicine, language — short articles and explainers, not formal study)',
+    'Keeping up with AI and dev tools in a hands-on, practical way (trying models and assistants, not architecting platforms)',
+    'Furniture making and vintage motorbike restoration',
+    'Small hobby web apps and practice projects on my personal site — learning and fun, not a company or product line',
+  ],
 };
 
 const aiEngineerCV = {
@@ -129,8 +136,8 @@ const consultantCV = {
       title: 'Independent Builder - AI, Data, and Product Projects',
       meta: '2023 - Present',
       bullets: [
-        'Built a portfolio of digital products across AI, education, analytics, automation, and user-facing web applications.',
-        'Worked from problem framing to prototype creation, iteration, and deployment-oriented implementation.',
+        'Built small side-project apps and experiments across AI, education, analytics, automation, and simple web UIs (hobby / learning scale, not a formal product org).',
+        'Worked from rough idea to prototype, iteration, and basic deployment where it made sense.',
       ],
     },
     {
@@ -466,6 +473,12 @@ function CVDocument(config) {
           { style: styles.sideSection },
           e(Text, { style: styles.sideHeading }, 'Languages'),
           ...base.languages.map((item) => e(Text, { style: styles.sideBullet, key: item }, `• ${item}`))
+        ),
+        e(
+          View,
+          { style: styles.sideSection },
+          e(Text, { style: styles.sideHeading }, 'Interests'),
+          ...base.interests.map((item) => e(Text, { style: styles.sideBullet, key: item }, `• ${item}`))
         )
       ),
       e(
