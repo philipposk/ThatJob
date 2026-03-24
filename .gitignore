@@ -39,3 +39,11 @@ next-env.d.ts
 *.log
 error.log
 combined.log
+
+# Personal documents (CVs, cover letters, diplomas, job exports) — keep local only
+/*.pdf
+/*.PDF
+/*.rtf
+/*.docx
+/public/templates/*.pdf
+/public/templates/*.PDF
