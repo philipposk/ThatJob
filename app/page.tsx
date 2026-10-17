@@ -13,10 +13,13 @@ export default function Home() {
       </div>
       <div className="max-w-4xl w-full text-center">
         <h1 className="text-4xl font-bold mb-4 text-foreground">
-          🎯 AI-Powered CV & Cover Letter Generator
+          CV and cover letter drafts
         </h1>
-        <p className="text-xl mb-8 text-gray-600 dark:text-gray-400">
-          Generate tailored CVs and cover letters that match your skills to job requirements
+        <p className="text-xl mb-4 text-gray-600 dark:text-gray-400">
+          Match a job post to your own materials.
+        </p>
+        <p className="text-sm mb-8 text-gray-600 dark:text-gray-400">
+          Not ready for accounts yet. The ThatJob tables are not on the shared database, so sign-in cannot open a real workspace.
         </p>
         <div className="flex gap-4 justify-center">
           <Link

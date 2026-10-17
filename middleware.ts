@@ -21,9 +21,7 @@ export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    // If env vars are missing, just pass through
-    // The app will show errors when trying to use Supabase features
+  if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder')) {
     return response;
   }
 
