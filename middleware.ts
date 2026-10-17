@@ -1,95 +1,14 @@
-import { createServerClient } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
-  // Skip middleware for static files, API routes, and root page
-  const pathname = request.nextUrl.pathname;
-  if (pathname === '/' || 
-      pathname.startsWith('/api') || 
-      pathname.startsWith('/_next') ||
-      pathname.startsWith('/favicon')) {
-    return NextResponse.next();
-  }
-
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
-
-  // Skip middleware if Supabase env vars are not set
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('placeholder')) {
-    return response;
-  }
-
-  try {
-    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
-          try {
-            cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value)
-            );
-            response = NextResponse.next({
-              request,
-            });
-            cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options)
-            );
-          } catch (e) {
-            // Ignore cookie errors
-          }
-        },
-      },
-    });
-
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      // Protect dashboard routes - but allow guest mode
-      // Guest mode is handled client-side via localStorage, so we can't check it here
-      // The dashboard page will handle guest mode checking
-      // Only redirect if we're sure it's not a guest (but we can't know, so let it through)
-      // The dashboard page itself will handle the redirect if needed
-
-      // Redirect authenticated users away from auth pages
-      if (
-        (request.nextUrl.pathname.startsWith('/login') ||
-          request.nextUrl.pathname.startsWith('/signup')) &&
-        user
-      ) {
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-      }
-    } catch (authError) {
-      // If auth check fails, just pass through
-      // Don't block the request
-    }
-  } catch (error) {
-    // If Supabase initialization fails, just pass through
-    // Don't block the request - let the page handle it
-  }
-
-  return response;
+// Auth redirects stay off this edge file. Importing @supabase/ssr here
+// throws "ReferenceError: __dirname is not defined" and 500s every page,
+// including the public home page. The home page says the workspace is not ready.
+export function middleware(_request: NextRequest) {
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (images, etc.)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
