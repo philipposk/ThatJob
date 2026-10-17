@@ -225,7 +225,7 @@ IMPORTANT:
 - Use professional, direct language
 - No corporate jargon or fluff
 - Match alignment level appropriately
-- Return only the final CV text in `cv_content`, with no extra notes before or after it
+- Return only the final CV text in cv_content, with no extra notes before or after it
 
 Return JSON:
 {
