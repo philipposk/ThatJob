@@ -154,6 +154,9 @@ export async function POST(request: NextRequest) {
         created_at: new Date().toISOString(),
       };
     } else {
+      if (!user) {
+        return NextResponse.json({ error: 'Not signed in' }, { status: 401 });
+      }
       // Save to database for authenticated users
       const { data: savedDoc, error: docError } = await supabase
         .from('generated_documents')

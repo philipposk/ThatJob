@@ -168,6 +168,8 @@ export default function ProfilePage() {
         return;
       }
 
+      if (!user) return;
+
       // Save to database for authenticated users
       const { error: updateError } = await supabase
         .from('user_profiles')

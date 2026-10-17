@@ -162,6 +162,9 @@ Return ONLY valid JSON:
         created_at: new Date().toISOString(),
       };
     } else {
+      if (!user) {
+        return NextResponse.json({ error: 'Not signed in' }, { status: 401 });
+      }
       // Save to database for authenticated users
       const { data: savedJob, error: jobError } = await supabase
         .from('job_postings')
@@ -197,6 +200,9 @@ Return ONLY valid JSON:
         match_details: { note: 'Guest mode - full analysis requires account' },
       };
     } else {
+      if (!user) {
+        return NextResponse.json({ error: 'Not signed in' }, { status: 401 });
+      }
       matchingScore = await calculateMatchingScore(user.id, jobPosting);
       
       // Save matching score for authenticated users
