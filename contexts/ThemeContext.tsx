@@ -15,6 +15,9 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>('system');
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+  // The pre-paint script in app/layout.tsx already applied the saved theme; don't
+  // re-apply the 'system' placeholder before the saved value has been read.
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     // Load theme from localStorage or default to system
@@ -25,9 +28,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       // Default to system if nothing saved
       setThemeState('system');
     }
+    setLoaded(true);
   }, []);
 
   useEffect(() => {
+    if (!loaded) return;
     const root = window.document.documentElement;
     
     // Determine resolved theme
@@ -43,7 +48,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Apply theme class
     root.classList.remove('light', 'dark');
     root.classList.add(resolved);
-  }, [theme]);
+  }, [theme, loaded]);
 
   // Listen for system theme changes
   useEffect(() => {
