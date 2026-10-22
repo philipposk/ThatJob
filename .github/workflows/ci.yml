@@ -1,0 +1,25 @@
+name: CI
+
+# Deploys come from the Vercel GitHub integration (the "Vercel" check).
+# The old workflow used vercel/action, which no longer exists, and the repo has
+# no Vercel secrets, so this job just checks that the app installs and builds.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
