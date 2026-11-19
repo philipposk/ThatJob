@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -11,10 +11,24 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // Double-submit protection: one sign-in at a time (ref ignores a fast second click); controls stay disabled with a
+  // spinner until the browser navigates away. Released on error and on bfcache return (pageshow.persisted).
+  const [oauthPending, setOauthPending] = useState<null | 'google' | 'github'>(null);
+  const pendingRef = useRef(false);
+  const busy = loading || oauthPending !== null;
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      if (e.persisted) { pendingRef.current = false; setOauthPending(null); setLoading(false); }
+    };
+    window.addEventListener('pageshow', onShow);
+    return () => window.removeEventListener('pageshow', onShow);
+  }, []);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (pendingRef.current) return;
+    pendingRef.current = true;
     setLoading(true);
     setError('');
 
@@ -29,18 +43,28 @@ export default function LoginPage() {
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.message);
-    } finally {
+      pendingRef.current = false;
       setLoading(false);
     }
   };
 
   const handleOAuth = async (provider: 'google' | 'github') => {
-    await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      },
-    });
+    if (pendingRef.current) return;
+    pendingRef.current = true;
+    setOauthPending(provider);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      setError(err?.message ?? 'Sign-in failed');
+      pendingRef.current = false;
+      setOauthPending(null);
+    }
   };
 
   return (
@@ -90,7 +114,8 @@ export default function LoginPage() {
           </div>
           <button
             type="submit"
-            disabled={loading}
+            disabled={busy}
+            aria-busy={loading}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
           >
             {loading ? 'Signing in...' : 'Sign in'}
@@ -108,16 +133,20 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => handleOAuth('google')}
+                disabled={busy}
+                aria-busy={oauthPending === 'google'}
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
-                Google
+                {oauthPending === 'google' ? <><span aria-hidden="true" className="mr-2 inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-r-transparent" />Signing in…</> : 'Google'}
               </button>
               <button
                 type="button"
                 onClick={() => handleOAuth('github')}
+                disabled={busy}
+                aria-busy={oauthPending === 'github'}
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
               >
-                GitHub
+                {oauthPending === 'github' ? <><span aria-hidden="true" className="mr-2 inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-r-transparent" />Signing in…</> : 'GitHub'}
               </button>
             </div>
           </div>
