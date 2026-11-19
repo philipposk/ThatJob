@@ -1,0 +1,7 @@
+# ThatJob
+
+> Generate tailored CVs and cover letters with AI
+
+- [ThatJob - AI CV & Cover Letter Generator](https://thatjob.6x7.gr/)
+- [Sitemap](https://thatjob.6x7.gr/sitemap.xml)
+- Made by [6x7](https://6x7.gr/). [All 6x7 apps](https://portfolio.6x7.gr/)
